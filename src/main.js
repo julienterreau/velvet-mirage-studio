@@ -1,42 +1,71 @@
 const archetypes = {
-  dominant: { label: 'Dominant', traits: ['confiance', 'charisme', 'contrôle', 'magnétique'] },
-  mysterious: { label: 'Mystérieux', traits: ['énigmatique', 'brillant', 'intense', 'séduisant'] },
-  sweet: { label: 'Doux', traits: ['chaleureux', 'tendre', 'doux', 'fidèle'] },
-  rebellious: { label: 'Révolutionnaire', traits: ['audacieux', 'libre', 'insouciant', 'ardent'] },
-  elegant: { label: 'Élégant', traits: ['raffiné', 'posé', 'luxueux', 'gracieux'] }
+  warrior: {
+    label: 'Guerrière',
+    traits: ['fière', 'résolue', 'protectrice', 'décisive'],
+    style: 'armure élégante, posture impériale, attitude de commandement'
+  },
+  duchess: {
+    label: 'Duchesse',
+    traits: ['élégante', 'intrigante', 'raffinée', 'charismatique'],
+    style: 'robe de velours noir, bijoux anciens, présence aristocratique'
+  },
+  mystic: {
+    label: 'Mystique',
+    traits: ['énigmatique', 'sensible', 'profond', 'ensorceleuse'],
+    style: 'lumière lunaire, voile translucide, regards captivants'
+  },
+  amazon: {
+    label: 'Amazone',
+    traits: ['puissante', 'libre', 'athlétique', 'imposante'],
+    style: 'silhouette sculptée, posture guerrière, allure majestueuse'
+  },
+  queen: {
+    label: 'Impératrice',
+    traits: ['majestueuse', 'implacable', 'dominante', 'radiant'],
+    style: 'robe royale, aura de commandement, beauté souveraine'
+  }
 };
 
-const settings = {
-  'Paris penthouse': ['rideau de soie', 'lumières dorées de la ville', 'balcon privé'],
-  'Moonlit villa': ['rideaux de velours', 'bougies douces', 'chambre miroir'],
-  'Neon rooftop lounge': ['skyline néon', 'mélancolie nocturne', 'robe satinée'],
-  'Private island estate': ['brise marine', 'coucher de soleil chaud', 'sol en marbre'],
-  'Old-world theater': ['velours dramatique', 'haze de scène', 'élégance historique']
+const worldOptions = {
+  'moonlit kingdom': ['palais lunaire', 'vignes sombres', 'cours de marbre'],
+  'sunset citadel': ['dômes en or', 'désert rouge', 'coucher de soleil royal'],
+  'temple of ash': ['voiles de cendre', 'pilliers antique', 'lumière sacrée'],
+  'battle palace': ['hall de guerre', 'tentes impériales', 'archers sur les remparts'],
+  'sable empire': ['dunes dorées', 'vent mystique', 'sérénité sacrée']
 };
 
 const moods = {
-  dangerous: 'tension lente et chimie électrique',
-  romantic: 'dévotion intime et sensuelle',
-  tender: 'proximité douce et confiance profonde',
-  seductive: 'confidence ludique et charme maîtrisé',
-  dramatic: 'romance intense et émotion cinématographique'
+  dangerous: 'dynamique dangereuse et magnétique',
+  romantic: 'romance passionnée et tendre',
+  mystic: 'mystère ancien et fascination silencieuse',
+  elegant: 'élégance aristocratique et présence rare',
+  royal: 'prestige royal et volonté de commandement'
 };
 
-const firstNames = ['Arielle', 'Selene', 'Mila', 'Camille', 'Lucia', 'Vera', 'Iris', 'Rosalie', 'Juliet', 'Noor'];
-const lastNames = ['Voss', 'Hart', 'Vale', 'Sorel', 'Stone', 'Deray', 'Blake', 'Dune', 'Marin', 'Aster'];
+const silhouettes = {
+  amazon: 'silhouette amazone, hanches sculptées, posture majestueuse',
+  fitted: 'silhouette cintrée, corsage ajusté, élégance aérienne',
+  royal: 'robe royale moulante, allure souveraine, présence impériale',
+  velvet: 'robe en velours sombre, ligne fluide, glamour discret'
+};
 
+const firstNames = ['Selene', 'Lysandra', 'Aurelia', 'Nerissa', 'Vesper', 'Cassia', 'Maeve', 'Ilyra', 'Sabrina', 'Elaria'];
+const lastNames = ['Veyr', 'Dorian', 'Vale', 'Ashen', 'Montrose', 'Sable', 'Raven', 'Cairn', 'Voss', 'Noir'];
+
+const titleInput = document.querySelector('#titleInput');
 const nameInput = document.querySelector('#nameInput');
 const archetypeSelect = document.querySelector('#archetypeSelect');
-const settingSelect = document.querySelector('#settingSelect');
+const worldSelect = document.querySelector('#worldSelect');
 const moodSelect = document.querySelector('#moodSelect');
+const silhouetteSelect = document.querySelector('#silhouetteSelect');
 const energySelect = document.querySelector('#energySelect');
 const imageUpload = document.querySelector('#imageUpload');
 const promptInput = document.querySelector('#promptInput');
 
 const characterName = document.querySelector('#characterName');
+const characterTitle = document.querySelector('#characterTitle');
 const characterRole = document.querySelector('#characterRole');
-const characterSetting = document.querySelector('#characterSetting');
-const characterMood = document.querySelector('#characterMood');
+const characterWorld = document.querySelector('#characterWorld');
 const traitList = document.querySelector('#traitList');
 const backstoryText = document.querySelector('#backstoryText');
 const promptOutput = document.querySelector('#promptOutput');
@@ -44,11 +73,11 @@ const portraitImage = document.querySelector('#portraitImage');
 
 const qaName = document.querySelector('#qaName');
 const qaArchetype = document.querySelector('#qaArchetype');
-const qaMood = document.querySelector('#qaMood');
-const qaSetting = document.querySelector('#qaSetting');
+const qaWorld = document.querySelector('#qaWorld');
 const qaEnergy = document.querySelector('#qaEnergy');
 const qaTraits = document.querySelector('#qaTraits');
 const qaPromptLength = document.querySelector('#qaPromptLength');
+const qaSilhouette = document.querySelector('#qaSilhouette');
 const qaImageStatus = document.querySelector('#qaImageStatus');
 const qaJsonOutput = document.querySelector('#qaJsonOutput');
 const qaHistoryList = document.querySelector('#qaHistoryList');
@@ -59,56 +88,66 @@ function randomFrom(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-function createPrompt(finalName, archetype, setting, mood, energy) {
-  const detail = randomFrom(settings[setting]);
+function createPrompt(finalName, title, archetype, world, mood, energy, silhouette) {
+  const worldDetail = randomFrom(worldOptions[world]);
   return [
-    `Portrait cinématographique hyperréaliste de ${finalName}, femme adulte ${archetype.label.toLowerCase()},`,
-    `dans une scène ${setting.toLowerCase()}, ${moods[mood]},`,
-    `éclairage dramatique doux, style luxueux, peau ultra détaillée, tenue élégante, pose raffinée,`,
-    `romance subtile, ambiance intime, cadrage premium, composition cinématique,`,
-    `détails réalistes, profondeur de champ douce, ${detail},`,
-    `expression charismatique, intensité ${energy}, grand rendu artistico-émotionnel.`
+    `Portrait of ${finalName}, ${title}, a breathtaking adult woman with ${archetype.style},`,
+    `in a ${world} environment, ${moods[mood]},`,
+    `luxury cinematic lighting, dramatic composition, immaculate skin, elegant dark fantasy wardrobe,`,
+    `${silhouettes[silhouette]}, strong delicate features, piercing expressive eyes,`,
+    `haute couture atmosphere, romantic tension, atmospheric shadows, soft gold and noir palette,`,
+    `${worldDetail}, rich cinematic textures, intense presence, refined beauty, elegant motion,`,
+    `photorealistic portrait, dramatic focus, premium fantasy art, intensity ${energy}.`
   ].join(' ');
 }
 
 function buildCharacter() {
   const customName = nameInput.value.trim();
+  const customTitle = titleInput.value.trim();
   const archetype = archetypes[archetypeSelect.value];
-  const setting = settingSelect.value;
+  const world = worldSelect.value;
   const mood = moodSelect.value;
   const energy = Number(energySelect.value);
+  const silhouette = silhouetteSelect.value;
 
   const finalName = customName || `${randomFrom(firstNames)} ${randomFrom(lastNames)}`;
+  const finalTitle = customTitle || `Noble de ${world}`;
   const selectedTraits = [...archetype.traits];
 
   while (selectedTraits.length < 4) {
     selectedTraits.push(randomFrom(Object.values(archetypes).flatMap((entry) => entry.traits)));
   }
 
-  const story = `${finalName} évolue dans ${setting.toLowerCase()} avec une confiance discrète qui fait de chaque pièce un lieu de tension. Elle sait transformer un simple regard en scène de désir, où chaque geste devient une déclaration silencieuse. Son aura mélange intensité et élégance, et la romance qui la suit semble toujours être à la fois dangereuse et inévitable.`;
+  const story = `${finalName}, connue sous le nom de ${finalTitle}, domine ${world} avec une présence presque surnaturelle. D’une élégance glacée et d’un courage sans faille, elle séduit autant qu’elle inspire la peur. Derrière son visage parfait et son allure royale, se cache une âme qui refuse la soumission. Accusée, aimée, admirée ou craint, elle avance comme une légende vivante, capable de transformer le danger en désir et la guerre en destin.`;
 
-  const generatedPrompt = createPrompt(finalName, archetype, setting, mood, energy);
+  const generatedPrompt = createPrompt(finalName, finalTitle, archetype, world, mood, energy, silhouette);
   const promptValue = promptInput.value.trim() || generatedPrompt;
 
   characterName.textContent = finalName;
+  characterTitle.textContent = finalTitle;
   characterRole.textContent = archetype.label;
-  characterSetting.textContent = setting;
-  characterMood.textContent = mood;
+  characterWorld.textContent = world;
 
-  traitList.innerHTML = selectedTraits.slice(0, 4).map((trait) => `<span class="trait">${trait}</span>`).join('');
+  traitList.innerHTML = selectedTraits
+    .slice(0, 4)
+    .map((trait) => `<span class="trait">${trait}</span>`)
+    .join('');
+
   backstoryText.textContent = story;
   promptOutput.textContent = promptValue;
   promptInput.value = promptValue;
 
   const state = {
     name: finalName,
+    title: finalTitle,
     archetype: archetype.label,
-    setting,
+    world,
     mood,
     energy,
+    silhouette,
     traits: selectedTraits.slice(0, 4),
     prompt: promptValue,
-    backstory: story,
+    history: story,
     hasImage: Boolean(portraitImage.src && portraitImage.src !== window.location.href),
     timestamp: new Date().toISOString()
   };
@@ -121,19 +160,21 @@ function buildCharacter() {
 function updateDashboard(state) {
   qaName.textContent = state.name;
   qaArchetype.textContent = state.archetype;
-  qaMood.textContent = state.mood;
-  qaSetting.textContent = state.setting;
+  qaWorld.textContent = state.world;
   qaEnergy.textContent = state.energy;
   qaTraits.textContent = state.traits.length;
   qaPromptLength.textContent = String(state.prompt.length);
+  qaSilhouette.textContent = state.silhouette;
   qaImageStatus.textContent = state.hasImage ? 'Oui' : 'Aucun';
 
   qaJsonOutput.textContent = JSON.stringify({
     name: state.name,
+    title: state.title,
     archetype: state.archetype,
-    setting: state.setting,
+    world: state.world,
     mood: state.mood,
     energy: state.energy,
+    silhouette: state.silhouette,
     traits: state.traits,
     promptLength: state.prompt.length,
     hasImage: state.hasImage,
@@ -143,16 +184,20 @@ function updateDashboard(state) {
 
 function renderHistory() {
   qaHistoryList.innerHTML = history
-    .map((item) => `<li><strong>${item.name}</strong> — ${item.archetype} / ${item.setting} / ${item.mood}</li>`)
+    .map((item) => `<li><strong>${item.name}</strong> — ${item.archetype} / ${item.world}</li>`)
     .join('');
 }
 
 function shuffleCharacter() {
   const randomName = `${randomFrom(firstNames)} ${randomFrom(lastNames)}`;
+  const randomTitle = `${randomFrom(['Duchesse', 'Reine', 'Gardienne', 'Élue', 'Commandante'])} des ${randomFrom(['ombres', 'dunes', 'flammes', 'lunes', 'cendres'])}`;
+
   nameInput.value = randomName;
+  titleInput.value = randomTitle;
   archetypeSelect.value = randomFrom(Object.keys(archetypes));
-  settingSelect.value = randomFrom(Object.keys(settings));
+  worldSelect.value = randomFrom(Object.keys(worldOptions));
   moodSelect.value = randomFrom(Object.keys(moods));
+  silhouetteSelect.value = randomFrom(Object.keys(silhouettes));
   energySelect.value = String(Math.floor(Math.random() * 4) + 1);
   buildCharacter();
 }
@@ -179,19 +224,19 @@ async function copyPrompt() {
     promptInput.focus();
     promptInput.select();
   } catch (error) {
-    console.warn('Clipboard unavailable:', error);
+    console.warn('Clipboard not available:', error);
   }
 }
 
 function downloadJson() {
   const payload = {
     name: characterName.textContent,
+    title: characterTitle.textContent,
     archetype: characterRole.textContent,
-    setting: characterSetting.textContent,
-    mood: characterMood.textContent,
-    traits: Array.from(document.querySelectorAll('.trait')).map((item) => item.textContent),
+    world: characterWorld.textContent,
     prompt: promptInput.value.trim(),
     backstory: backstoryText.textContent,
+    traits: Array.from(document.querySelectorAll('.trait')).map((item) => item.textContent),
     hasImage: Boolean(portraitImage.src && portraitImage.src !== window.location.href)
   };
 
@@ -237,19 +282,25 @@ function exportCardAsPng() {
     const img = new Image();
     img.onload = () => {
       ctx.save();
-      ctx.beginPath();
       roundRect(ctx, portraitX, portraitY, portraitW, portraitH, 28);
       ctx.clip();
       ctx.drawImage(img, portraitX, portraitY, portraitW, portraitH);
       ctx.restore();
-      drawTextLayer(ctx, cardX, cardY, cardW, cardH);
+      drawTextLayer(ctx);
       downloadCanvas(canvas);
     };
     img.src = portraitImage.src;
     return;
   }
 
-  const artGradient = ctx.createRadialGradient(portraitX + 150, portraitY + 80, 20, portraitX + 150, portraitY + 150, 260);
+  const artGradient = ctx.createRadialGradient(
+    portraitX + 150,
+    portraitY + 80,
+    20,
+    portraitX + 150,
+    portraitY + 150,
+    260
+  );
   artGradient.addColorStop(0, 'rgba(255,255,255,0.25)');
   artGradient.addColorStop(0.4, 'rgba(255, 154, 170, 0.33)');
   artGradient.addColorStop(1, 'rgba(18,12,20,0.9)');
@@ -257,17 +308,17 @@ function exportCardAsPng() {
   roundRect(ctx, portraitX, portraitY, portraitW, portraitH, 28);
   ctx.fill();
 
-  drawTextLayer(ctx, cardX, cardY, cardW, cardH);
+  drawTextLayer(ctx);
   downloadCanvas(canvas);
 }
 
-function drawTextLayer(ctx, cardX, cardY, cardW, cardH) {
+function drawTextLayer(ctx) {
   const title = characterName.textContent || 'Velvet Mirage';
-  const archetype = characterRole.textContent || 'Dominant';
-  const setting = characterSetting.textContent || 'Paris penthouse';
-  const mood = characterMood.textContent || 'romantic';
-  const textX = cardX + 500;
-  let textY = cardY + 165;
+  const subtitle = characterTitle.textContent || 'Reine des dunes';
+  const archetype = characterRole.textContent || 'Guerrière';
+  const world = characterWorld.textContent || 'royaume de lune';
+  const textX = 510;
+  let textY = 220;
 
   ctx.fillStyle = '#f7ebff';
   ctx.font = '700 48px Inter, sans-serif';
@@ -275,29 +326,28 @@ function drawTextLayer(ctx, cardX, cardY, cardW, cardH) {
 
   ctx.fillStyle = '#d8c7e5';
   ctx.font = '600 24px Inter, sans-serif';
-  ctx.fillText('Velvet Mirage Studio', textX, textY + 42);
+  ctx.fillText(subtitle, textX, textY + 42);
 
   ctx.fillStyle = '#ff6dcf';
-  ctx.fillRect(textX, textY + 72, 220, 5);
+  ctx.fillRect(textX, textY + 68, 220, 5);
 
-  ctx.fillStyle = '#e9d9ff';
+  ctx.fillStyle = '#f3eaf8';
   ctx.font = '500 20px Inter, sans-serif';
-  ctx.fillText(`${archetype} • ${setting}`, textX, textY + 120);
-  ctx.fillText(`Ambiance: ${mood}`, textX, textY + 155);
+  ctx.fillText(`${archetype} • ${world}`, textX, textY + 120);
 
   const traits = Array.from(document.querySelectorAll('.trait')).map((el) => el.textContent).slice(0, 4);
   ctx.fillStyle = '#f8d797';
   ctx.font = '600 18px Inter, sans-serif';
   traits.forEach((trait, index) => {
-    ctx.fillText(`#${trait}`, textX + index * 110, textY + 215);
+    ctx.fillText(`#${trait}`, textX + index * 110, textY + 170);
   });
 
   const prompt = (promptInput.value || promptOutput.textContent || '').trim();
-  const wrapped = wrapText(ctx, prompt, 540, 2);
+  const wrapped = wrapText(ctx, prompt, 540, 4);
   ctx.fillStyle = '#f3eaf8';
-  ctx.font = '500 20px Inter, sans-serif';
+  ctx.font = '500 18px Inter, sans-serif';
   wrapped.forEach((line, index) => {
-    ctx.fillText(line, textX, textY + 290 + index * 28);
+    ctx.fillText(line, textX, textY + 245 + index * 28);
   });
 }
 
@@ -346,31 +396,37 @@ function roundRect(ctx, x, y, width, height, radius) {
 }
 
 imageUpload.addEventListener('change', handleImageUpload);
-promptInput.addEventListener('input', () => {
-  const value = promptInput.value.trim();
-  promptOutput.textContent = value || 'Le prompt sera généré ici...';
-  updateDashboard({
-    name: characterName.textContent,
-    archetype: characterRole.textContent,
-    setting: characterSetting.textContent,
-    mood: characterMood.textContent,
-    energy: Number(energySelect.value),
-    traits: Array.from(document.querySelectorAll('.trait')).map((node) => node.textContent),
-    prompt: value,
-    backstory: backstoryText.textContent,
-    hasImage: Boolean(portraitImage.src && portraitImage.src !== window.location.href)
-  });
-});
 
 document.querySelector('#generateBtn').addEventListener('click', buildCharacter);
 document.querySelector('#shuffleBtn').addEventListener('click', shuffleCharacter);
 document.querySelector('#copyPromptBtn').addEventListener('click', copyPrompt);
 document.querySelector('#downloadJsonBtn').addEventListener('click', downloadJson);
 document.querySelector('#exportPngBtn').addEventListener('click', exportCardAsPng);
+
+promptInput.addEventListener('input', () => {
+  const value = promptInput.value.trim();
+  promptOutput.textContent = value || 'Le prompt sera généré ici...';
+  updateDashboard({
+    name: characterName.textContent,
+    title: characterTitle.textContent,
+    archetype: characterRole.textContent,
+    world: characterWorld.textContent,
+    mood: moodSelect.value,
+    energy: Number(energySelect.value),
+    silhouette: silhouetteSelect.value,
+    traits: Array.from(document.querySelectorAll('.trait')).map((node) => node.textContent),
+    prompt: value,
+    history: backstoryText.textContent,
+    hasImage: Boolean(portraitImage.src && portraitImage.src !== window.location.href)
+  });
+});
+
 nameInput.addEventListener('input', buildCharacter);
+titleInput.addEventListener('input', buildCharacter);
 archetypeSelect.addEventListener('change', buildCharacter);
-settingSelect.addEventListener('change', buildCharacter);
+worldSelect.addEventListener('change', buildCharacter);
 moodSelect.addEventListener('change', buildCharacter);
+silhouetteSelect.addEventListener('change', buildCharacter);
 energySelect.addEventListener('change', buildCharacter);
 
 buildCharacter();
