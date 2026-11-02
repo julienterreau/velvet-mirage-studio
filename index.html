@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Velvet Mirage Studio</title>
+    <meta name="description" content="Créateur de personnage et de prompt pour un univers romantique adulte cinématographique." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-wrap">
+          <div class="logo">V</div>
+          <div>
+            <span class="eyebrow">Studio</span>
+            <h1>Velvet Mirage</h1>
+          </div>
+        </div>
+        <div class="status-pill">AI love story generator</div>
+      </header>
+
+      <main class="layout">
+        <aside class="panel builder-panel">
+          <div class="panel-header">
+            <p class="eyebrow">Character Builder</p>
+            <h2>Créer une héroïne</h2>
+          </div>
+
+          <div class="field-group">
+            <label for="nameInput">Nom du personnage</label>
+            <input id="nameInput" type="text" value="Arielle Voss" maxlength="30" />
+          </div>
+
+          <div class="field-group">
+            <label for="archetypeSelect">Archétype</label>
+            <select id="archetypeSelect">
+              <option value="dominant">Dominant</option>
+              <option value="mysterious">Mystérieux</option>
+              <option value="sweet">Doux</option>
+              <option value="rebellious">Révolutionnaire</option>
+              <option value="elegant">Élégant</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="moodSelect">Ambiance</label>
+            <select id="moodSelect">
+              <option value="dangerous">Dangereux</option>
+              <option value="romantic">Romantique</option>
+              <option value="tender">Tendre</option>
+              <option value="seductive">Séductrice</option>
+              <option value="dramatic">Dramatique</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="settingSelect">Décor</label>
+            <select id="settingSelect">
+              <option value="Paris penthouse">Penthouse à Paris</option>
+              <option value="Moonlit villa">Villa au clair de lune</option>
+              <option value="Neon rooftop lounge">Roof lounge néon</option>
+              <option value="Private island estate">Villa sur île privée</option>
+              <option value="Old-world theater">Théâtre classique</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="energySelect">Intensité</label>
+            <select id="energySelect">
+              <option value="1">Faible</option>
+              <option value="2">Moyenne</option>
+              <option value="3" selected>Élevée</option>
+              <option value="4">Très élevée</option>
+            </select>
+          </div>
+
+          <div class="action-row">
+            <button id="generateBtn" class="btn-primary">Générer</button>
+            <button id="shuffleBtn" class="btn-secondary">Aléatoire</button>
+          </div>
+        </aside>
+
+        <section class="panel preview-panel">
+          <div class="character-card">
+            <div class="portrait" aria-label="Portrait du personnage">
+              <div class="halo"></div>
+              <div class="hair"></div>
+              <div class="face"></div>
+              <div class="body"></div>
+              <div class="detail one"></div>
+              <div class="detail two"></div>
+            </div>
+
+            <div class="character-copy">
+              <div class="name-row">
+                <h2 id="characterName">Arielle Voss</h2>
+              </div>
+
+              <div class="tag-row">
+                <span id="characterRole" class="tag">Dominant</span>
+                <span id="characterSetting" class="tag">Penthouse à Paris</span>
+                <span id="characterMood" class="tag">Dangereux</span>
+              </div>
+
+              <div id="traitList" class="trait-list"></div>
+            </div>
+          </div>
+
+          <div class="story-grid">
+            <article class="story-card">
+              <p class="eyebrow">Background</p>
+              <h3>Histoire</h3>
+              <p id="backstoryText"></p>
+            </article>
+
+            <article class="story-card">
+              <p class="eyebrow">Prompt</p>
+              <h3>Scene de génération</h3>
+              <pre id="promptOutput"></pre>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
