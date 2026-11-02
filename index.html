@@ -36,13 +36,29 @@
           </div>
 
           <div class="field-group">
+            <label for="titleInput">Titre</label>
+            <input id="titleInput" type="text" value="Princesse des ombres" maxlength="40" />
+          </div>
+
+          <div class="field-group">
             <label for="archetypeSelect">Archétype</label>
             <select id="archetypeSelect">
-              <option value="dominant">Dominant</option>
-              <option value="mysterious">Mystérieux</option>
-              <option value="sweet">Doux</option>
-              <option value="rebellious">Révolutionnaire</option>
-              <option value="elegant">Élégant</option>
+              <option value="mystic">Mystique</option>
+              <option value="warrior">Guerrière</option>
+              <option value="duchess">Duchesse</option>
+              <option value="amazon">Amazone</option>
+              <option value="queen">Impératrice</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="worldSelect">Monde</label>
+            <select id="worldSelect">
+              <option value="moonlit kingdom">Royaume lunaire</option>
+              <option value="sunset citadel">Citadelle du coucher</option>
+              <option value="temple of ash">Temple des cendres</option>
+              <option value="battle palace">Palais de guerre</option>
+              <option value="sable empire">Empire du sable</option>
             </select>
           </div>
 
@@ -51,20 +67,30 @@
             <select id="moodSelect">
               <option value="dangerous">Dangereux</option>
               <option value="romantic">Romantique</option>
-              <option value="tender">Tendre</option>
-              <option value="seductive">Séductrice</option>
-              <option value="dramatic">Dramatique</option>
+              <option value="mystic">Mystique</option>
+              <option value="elegant">Élégant</option>
+              <option value="royal">Royal</option>
             </select>
           </div>
 
           <div class="field-group">
             <label for="settingSelect">Décor</label>
             <select id="settingSelect">
-              <option value="Paris penthouse">Penthouse à Paris</option>
-              <option value="Moonlit villa">Villa au clair de lune</option>
-              <option value="Neon rooftop lounge">Roof lounge néon</option>
-              <option value="Private island estate">Villa sur île privée</option>
-              <option value="Old-world theater">Théâtre classique</option>
+              <option value="Penthouse à Paris">Penthouse à Paris</option>
+              <option value="Villa au clair de lune">Villa au clair de lune</option>
+              <option value="Roof lounge néon">Roof lounge néon</option>
+              <option value="Villa sur île privée">Villa sur île privée</option>
+              <option value="Théâtre classique">Théâtre classique</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="silhouetteSelect">Silhouette</label>
+            <select id="silhouetteSelect">
+              <option value="royal">Royale</option>
+              <option value="amazon">Amazone</option>
+              <option value="fitted">Cintrée</option>
+              <option value="velvet">Velours</option>
             </select>
           </div>
 
@@ -92,6 +118,12 @@
             <button id="generateBtn" class="btn-primary">Générer</button>
             <button id="shuffleBtn" class="btn-secondary">Aléatoire</button>
           </div>
+
+          <div class="secondary-actions">
+            <button id="copyPromptBtn" class="btn-ghost">Copier prompt</button>
+            <button id="downloadJsonBtn" class="btn-ghost">JSON</button>
+            <button id="exportPngBtn" class="btn-ghost">Exporter PNG</button>
+          </div>
         </aside>
 
         <section class="panel preview-panel">
@@ -109,12 +141,14 @@
             <div class="character-copy">
               <div class="name-row">
                 <h2 id="characterName">Arielle Voss</h2>
+                <h3 id="characterTitle">Princesse des ombres</h3>
               </div>
 
               <div class="tag-row">
-                <span id="characterRole" class="tag">Dominant</span>
+                <span id="characterRole" class="tag">Mystique</span>
                 <span id="characterSetting" class="tag">Penthouse à Paris</span>
-                <span id="characterMood" class="tag">Dangereux</span>
+                <span id="characterMood" class="tag">Romantique</span>
+                <span id="characterWorld" class="tag">Royaume lunaire</span>
               </div>
 
               <div id="traitList" class="trait-list"></div>
@@ -130,7 +164,7 @@
 
             <article class="story-card">
               <p class="eyebrow">Prompt</p>
-              <h3>Scene de génération</h3>
+              <h3>Scène de génération</h3>
               <pre id="promptOutput"></pre>
             </article>
           </div>
