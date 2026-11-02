@@ -78,6 +78,16 @@
             </select>
           </div>
 
+          <div class="field-group">
+            <label for="imageUpload">Portrait personnalisé</label>
+            <input id="imageUpload" type="file" accept="image/*" />
+          </div>
+
+          <div class="field-group">
+            <label for="promptInput">Prompt personnalisé</label>
+            <textarea id="promptInput" rows="6" placeholder="Collez ou modifiez le prompt ici..."></textarea>
+          </div>
+
           <div class="action-row">
             <button id="generateBtn" class="btn-primary">Générer</button>
             <button id="shuffleBtn" class="btn-secondary">Aléatoire</button>
@@ -87,6 +97,7 @@
         <section class="panel preview-panel">
           <div class="character-card">
             <div class="portrait" aria-label="Portrait du personnage">
+              <img id="portraitImage" class="portrait-image" alt="Portrait personnalisé" />
               <div class="halo"></div>
               <div class="hair"></div>
               <div class="face"></div>
