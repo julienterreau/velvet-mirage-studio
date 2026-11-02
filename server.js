@@ -8,33 +8,49 @@ dotenv.config();
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const port = Number(process.env.PORT || 3001);
+const PORT = Number(process.env.PORT || 3001);
+
+const DIGEN_BASE_URL =
+  process.env.DIGEN_BASE_URL ||
+  'https://api.digen.ai/v2/gateway/agent/openapi/v1';
+
+const DIGEN_API_KEY = process.env.DIGEN_API_KEY;
 
 app.use(cors());
 app.use(express.json({ limit: '4mb' }));
 
-const DIGEN_API_URL = process.env.DIGEN_API_URL || 'https://api.digen.ai/v1/chat/completions';
-const DIGEN_API_KEY = process.env.DIGEN_API_KEY || '';
+function getDigenHeaders() {
+  if (!DIGEN_API_KEY) {
+    throw new Error('Missing DIGEN_API_KEY');
+  }
 
-function makeFallbackProfile(payload) {
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${DIGEN_API_KEY}`,
+    'X-API-Key': DIGEN_API_KEY
+  };
+}
+
+function fallbackProfile(payload = {}) {
   const {
     name = 'Arielle Voss',
     title = 'Princesse des ombres',
     archetype = 'Mystique',
     mood = 'romantique',
     setting = 'Penthouse à Paris',
+    world = 'Royaume lunaire',
     energy = 3,
     prompt = ''
   } = payload;
 
-  const description = `Elle s'appelle ${name}, sous le titre de ${title}. C'est une femme ${archetype.toLowerCase()} avec une présence magnétique et une élégance froide. Dans ${setting}, elle incarne une énergie ${mood}, à la fois vulnérable et déterminée. La scène est filmée dans un style luxe noir, lumière cinématique, textures profondes, romance intense mais élégante. `;
-
-  const fallbackPrompt = prompt || [
-    `Portrait of ${name}, ${title}, a breathtaking adult woman with elegant cinematic presence,`,
-    `in ${setting}, dark romantic luxury aesthetic, dramatic lighting, premium fashion mood,`,
-    `soft shadows, elegant silhouette, rich color palette, cinematic composition, refined elegance,`,
-    `emotional intensity ${energy}, mature elegance, beautiful face structure, warm and mysterious look.`
-  ].join(' ');
+  const fallbackPrompt =
+    prompt ||
+    [
+      `Portrait of ${name}, ${title}, a breathtaking adult woman with elegant cinematic presence,`,
+      `in ${world}, ${mood} mood, luxury noir palette, dramatic lighting, premium fashion composition,`,
+      `dark romantic aesthetic, beautiful mature features, refined silhouette, cinematic texture,`,
+      `soft gold and shadow contrast, emotional tension, strong feminine presence, intensity ${energy}.`
+    ].join(' ');
 
   return {
     ok: true,
@@ -44,159 +60,283 @@ function makeFallbackProfile(payload) {
     archetype,
     mood,
     setting,
+    world,
     energy,
-    backstory: description,
     prompt: fallbackPrompt,
-    character: {
-      name,
-      title,
-      archetype,
-      setting,
-      mood,
-      energy,
-      prompt: fallbackPrompt
-    }
+    backstory:
+      `${name}, connue sous le nom de ${title}, inspire une présence presque surnaturelle dans ${setting}. ` +
+      `Sa beauté est maîtrisée, élégante, presque inévitable, avec une énergie ${mood} et une aura de pouvoir discret. ` +
+      `Elle sait dominer la scène sans effort, avec un mélange de mystère, de charme et de détermination.`
   };
 }
 
-async function callDigen(payload) {
-  if (!DIGEN_API_KEY || !DIGEN_API_URL) {
-    return null;
+async function createConversation() {
+  const res = await fetch(`${DIGEN_BASE_URL}/conversations`, {
+    method: 'POST',
+    headers: getDigenHeaders(),
+    body: JSON.stringify({
+      title: 'Velvet Mirage character session',
+      metadata: {
+        app: 'velvet-mirage-studio'
+      }
+    })
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`createConversation failed: ${res.status} ${text}`);
   }
 
-  try {
-    const response = await fetch(DIGEN_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${DIGEN_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'default',
-        temperature: 0.9,
-        messages: [
-          {
-            role: 'system',
-            content: `You are a premium dark romantic fantasy character designer. Keep the tone elegant, cinematic, mature, and non-explicit. Preserve the subject's identity when a reference image is provided. Do not force a medieval costume or fixed archetype unless requested. Let the look remain free and creative while keeping premium fantasy and modern luxury vibes.`
-          },
-          {
-            role: 'user',
-            content: JSON.stringify(payload, null, 2)
-          }
-        ]
-      })
-    });
+  return res.json();
+}
 
-    if (!response.ok) {
-      throw new Error(`Digen error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (typeof data?.choices?.[0]?.message?.content === 'string') {
-      return { ok: true, source: 'digen', content: data.choices[0].message.content };
-    }
-
-    if (typeof data?.output_text === 'string') {
-      return { ok: true, source: 'digen', content: data.output_text };
-    }
-
-    return { ok: true, source: 'digen', content: JSON.stringify(data, null, 2) };
-  } catch (error) {
-    console.error('Digen call failed:', error.message);
-    return null;
+async function readSSE(response) {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    const text = await response.text();
+    return text;
   }
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+  }
+
+  const blocks = buffer
+    .split(/\n\n+/)
+    .map((b) => b.trim())
+    .filter(Boolean);
+
+  let result = '';
+
+  for (const block of blocks) {
+    const lines = block.split('\n');
+
+    for (const line of lines) {
+      if (!line.startsWith('data:')) continue;
+
+      const raw = line.replace(/^data:\s*/, '').trim();
+      if (!raw || raw === '[DONE]') continue;
+
+      try {
+        const parsed = JSON.parse(raw);
+
+        const candidate =
+          parsed?.content ??
+          parsed?.text ??
+          parsed?.answer ??
+          parsed?.message?.content ??
+          parsed?.delta ??
+          parsed?.data?.content ??
+          parsed?.output ??
+          parsed?.choices?.[0]?.delta?.content ??
+          parsed?.choices?.[0]?.message?.content;
+
+        if (candidate) {
+          result += Array.isArray(candidate) ? candidate.join('') : String(candidate);
+        }
+      } catch {
+        result += raw;
+      }
+    }
+  }
+
+  return result || buffer;
+}
+
+async function sendChat(conversationId, message, context = {}) {
+  const res = await fetch(`${DIGEN_BASE_URL}/chat`, {
+    method: 'POST',
+    headers: getDigenHeaders(),
+    body: JSON.stringify({
+      conversation_id: conversationId,
+      message,
+      stream: true,
+      context,
+      role: 'user'
+    })
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`chat failed: ${res.status} ${text}`);
+  }
+
+  return readSSE(res);
+}
+
+function buildCharacterPrompt(payload) {
+  const {
+    name = 'Arielle Voss',
+    title = 'Princesse des ombres',
+    archetype = 'Mystique',
+    mood = 'romantique',
+    setting = 'Penthouse à Paris',
+    world = 'Royaume lunaire',
+    energy = 3,
+    silhouette = 'royale',
+    prompt = ''
+  } = payload;
+
+  if (prompt) return prompt;
+
+  return [
+    'Create a premium dark romantic cinematic heroine inspired by this profile:',
+    `Name: ${name}`,
+    `Title: ${title}`,
+    `Archetype: ${archetype}`,
+    `Mood: ${mood}`,
+    `World: ${world}`,
+    `Setting: ${setting}`,
+    `Silhouette: ${silhouette}`,
+    `Energy: ${energy}`,
+    'Style: luxurious dark romance, mature elegance, cinematic lighting, dramatic shadows, premium fashion, refined sensuality, beautiful facial structure, natural beauty, emotional intensity.',
+    'Avoid explicit sexual content, abuse, coercion, gore, and degrading scenes.',
+    'Keep the character visually elegant, free, and believable.'
+  ].join('\n');
+}
+
+function buildScenePrompt(payload) {
+  const {
+    name = 'Arielle',
+    title = 'Princesse des ombres',
+    archetype = 'Mystique',
+    mood = 'romantique',
+    setting = 'Penthouse à Paris',
+    world = 'Royaume lunaire'
+  } = payload;
+
+  return [
+    'Write one elegant cinematic scene in a dark romantic premium setting.',
+    `Character: ${name}, ${title}, ${archetype}`,
+    `Setting: ${setting}, ${world}`,
+    `Mood: ${mood}`,
+    'Tone: mature, elegant, emotional, sexy but tasteful, non-explicit, cinematic.',
+    'Use atmospheric prose, rich romantic tension, refined dialogue, and strong visual detail.'
+  ].join('\n');
 }
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, message: 'Velvet Mirage API is running.' });
+  res.json({ ok: true, message: 'Velvet Mirage API running' });
 });
 
 app.post('/api/profile', async (req, res) => {
-  const payload = req.body || {};
+  try {
+    const payload = req.body || {};
+    const prompt = buildCharacterPrompt(payload);
 
-  const digenResult = await callDigen({
-    intent: 'character_profile',
-    ...payload,
-    style: 'dark romantic cinematic premium',
-    constraints: 'No explicit content, no abuse, no non-consensual scenes, no gore. Keep adult elegance and freedom of creative interpretation.'
-  });
-
-  if (digenResult) {
-    let parsed = digenResult.content;
-    try {
-      parsed = JSON.parse(digenResult.content);
-    } catch (_err) {
-      // keep raw string text if not JSON
+    if (!DIGEN_API_KEY) {
+      return res.json(fallbackProfile(payload));
     }
+
+    const conversation = await createConversation();
+    const output = await sendChat(conversation.id, prompt, {
+      kind: 'profile',
+      payload
+    });
 
     return res.json({
       ok: true,
       source: 'digen',
-      ...makeFallbackProfile(payload),
-      ...((parsed && typeof parsed === 'object') ? parsed : { narrative: digenResult.content })
+      name: payload.name || 'Arielle Voss',
+      title: payload.title || 'Princesse des ombres',
+      archetype: payload.archetype || 'Mystique',
+      prompt,
+      backstory: output || `${payload.name || 'Arielle'} est une héroïne élégante, mystérieuse et magnétique.`
     });
+  } catch (err) {
+    console.error('PROFILE ERROR:', err);
+    return res.json(fallbackProfile(req.body || {}));
   }
-
-  return res.json(makeFallbackProfile(payload));
 });
 
 app.post('/api/chat', async (req, res) => {
-  const payload = req.body || {};
-  const history = Array.isArray(payload.history) ? payload.history : [];
-  const message = payload.message || 'Parle-moi comme une héroïne mystérieuse et fascinante.';
+  try {
+    const { message, character, history = [] } = req.body || {};
+    const prompt = message || 'Parle-moi comme une héroïne mystérieuse et fascinante.';
 
-  const digenResult = await callDigen({
-    intent: 'roleplay_chat',
-    character: payload.character || {},
-    history,
-    message,
-    tone: 'dark romantic mature cinematic, elegant, emotionally rich, non-explicit'
-  });
+    if (!DIGEN_API_KEY) {
+      return res.json({
+        ok: true,
+        source: 'fallback',
+        reply:
+          `Je suis ${character?.name || 'Arielle'}, et je me souviens de toi. ` +
+          `Continue en gardant le même ton, la même présence et la même intensité.`
+      });
+    }
 
-  if (digenResult) {
+    const conversation = await createConversation();
+    const output = await sendChat(conversation.id, prompt, {
+      character: character || {},
+      history,
+      tone: 'dark romantic premium, elegant and mature, non-explicit'
+    });
+
     return res.json({
       ok: true,
       source: 'digen',
-      reply: digenResult.content,
-      message
+      reply: output || '...',
+      message: prompt
+    });
+  } catch (err) {
+    console.error('CHAT ERROR:', err);
+    return res.json({
+      ok: true,
+      source: 'fallback',
+      reply:
+        `Je suis ${req.body?.character?.name || 'Arielle'}, et je me souviens de toi. ` +
+        `Continue la conversation, je garde le même ton, la même présence et la même intensité.`,
+      message: req.body?.message || ''
     });
   }
-
-  return res.json({
-    ok: true,
-    source: 'fallback',
-    reply: `Je suis ${payload.character?.name || 'Arielle'}, et je me souviens de toi. Tu as posé une question, je le garde en mémoire. Continue et je répondrai avec la même intensité, la même élégance et la même tension...`,
-    message
-  });
 });
 
 app.post('/api/scene', async (req, res) => {
-  const payload = req.body || {};
-  const digenResult = await callDigen({
-    intent: 'scene_generation',
-    ...payload,
-    style: 'dark romantic cinematic scene in a premium adult setting',
-    constraints: 'No explicit content, no abuse, no non-consensual scenes, no gore.'
-  });
+  try {
+    const payload = req.body || {};
+    const prompt = buildScenePrompt(payload);
 
-  if (digenResult) {
-    return res.json({ ok: true, source: 'digen', scene: digenResult.content });
+    if (!DIGEN_API_KEY) {
+      return res.json({
+        ok: true,
+        source: 'fallback',
+        scene:
+          `${payload.name || 'La héroïne'} attend dans une pièce aux lumières basses. ` +
+          `Le silence est lourd, la tension est élégante, la romance est raffinée et mystérieuse.`
+      });
+    }
+
+    const conversation = await createConversation();
+    const output = await sendChat(conversation.id, prompt, {
+      kind: 'scene',
+      payload
+    });
+
+    return res.json({
+      ok: true,
+      source: 'digen',
+      scene: output || 'Scene default'
+    });
+  } catch (err) {
+    console.error('SCENE ERROR:', err);
+    return res.json({
+      ok: true,
+      source: 'fallback',
+      scene:
+        `${req.body?.name || 'La héroïne'} attend dans une pièce aux lumières basses. ` +
+        `Le silence est lourd, la tension est élégante, le mystère est présent, et la romance devient presque palpable.`
+    });
   }
-
-  return res.json({
-    ok: true,
-    source: 'fallback',
-    scene: `${payload.character?.name || 'La héroïne'} attend dans un salon aux lumières basses. Le silence est lourd. Le désir est dans l'air, mais la tension est élégante et maîtrisée. La scène prend une tournure dramatique et raffinée, avec un parfum de mystère, de loyauté et de passion contenue.`
-  });
 });
 
 const distPath = path.join(__dirname, 'dist');
-const hasDist = path.existsSync(distPath);
 
-if (hasDist) {
+if (path.existsSync(distPath)) {
   app.use(express.static(distPath));
-
   app.get('*', (_req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
   });
@@ -209,6 +349,6 @@ if (hasDist) {
   });
 }
 
-app.listen(port, () => {
-  console.log(`Velvet Mirage API listening on http://localhost:${port}`);
+app.listen(PORT, () => {
+  console.log(`Velvet Mirage API listening on http://localhost:${PORT}`);
 });
