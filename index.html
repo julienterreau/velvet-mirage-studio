@@ -3,141 +3,156 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Velvet Mirage Studio</title>
-    <meta name="description" content="Créateur de personnage et de prompt pour un univers romantique adulte cinématographique." />
+    <meta name="description" content="Banc de test local pour scénario interactif, image de référence et prompt PixVerse R1." />
+    <title>Velvet Mirage — Banc de test R1</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/styles.css" />
+    <link rel="stylesheet" href="/src/live-world.css" />
   </head>
   <body>
-    <div class="app-shell">
+    <div class="app-shell live-shell">
       <header class="topbar">
-        <div class="brand-wrap">
-          <div class="logo">V</div>
-          <div>
-            <span class="eyebrow">Studio</span>
+        <a class="brand-wrap brand-link" href="/" aria-label="Velvet Mirage, accueil">
+          <span class="logo" aria-hidden="true">V</span>
+          <span>
+            <span class="eyebrow">Studio · laboratoire interactif</span>
             <h1>Velvet Mirage</h1>
-          </div>
-        </div>
-        <div class="status-pill">AI love story generator</div>
+          </span>
+        </a>
+        <span class="status-pill"><span class="status-dot"></span> Simulation locale · API R1 non connectée</span>
       </header>
 
-      <main class="layout">
-        <aside class="panel builder-panel">
-          <div class="panel-header">
-            <p class="eyebrow">Character Builder</p>
-            <h2>Créer une héroïne</h2>
+      <main>
+        <section class="intro-block" aria-labelledby="pageTitle">
+          <div>
+            <p class="eyebrow">Banc de test world model</p>
+            <h2 id="pageTitle">Fais évoluer la scène par le dialogue.</h2>
+            <p class="intro-copy">Charge une référence, ajuste le prompt et envoie des actions dans le chat. Le prototype met à jour le contexte localement pour préparer le test R1.</p>
           </div>
-
-          <div class="field-group">
-            <label for="nameInput">Nom du personnage</label>
-            <input id="nameInput" type="text" value="Arielle Voss" maxlength="30" />
-          </div>
-
-          <div class="field-group">
-            <label for="archetypeSelect">Archétype</label>
-            <select id="archetypeSelect">
-              <option value="dominant">Dominant</option>
-              <option value="mysterious">Mystérieux</option>
-              <option value="sweet">Doux</option>
-              <option value="rebellious">Révolutionnaire</option>
-              <option value="elegant">Élégant</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label for="moodSelect">Ambiance</label>
-            <select id="moodSelect">
-              <option value="dangerous">Dangereux</option>
-              <option value="romantic">Romantique</option>
-              <option value="tender">Tendre</option>
-              <option value="seductive">Séductrice</option>
-              <option value="dramatic">Dramatique</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label for="settingSelect">Décor</label>
-            <select id="settingSelect">
-              <option value="Paris penthouse">Penthouse à Paris</option>
-              <option value="Moonlit villa">Villa au clair de lune</option>
-              <option value="Neon rooftop lounge">Roof lounge néon</option>
-              <option value="Private island estate">Villa sur île privée</option>
-              <option value="Old-world theater">Théâtre classique</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label for="energySelect">Intensité</label>
-            <select id="energySelect">
-              <option value="1">Faible</option>
-              <option value="2">Moyenne</option>
-              <option value="3" selected>Élevée</option>
-              <option value="4">Très élevée</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label for="imageUpload">Portrait personnalisé</label>
-            <input id="imageUpload" type="file" accept="image/*" />
-          </div>
-
-          <div class="field-group">
-            <label for="promptInput">Prompt personnalisé</label>
-            <textarea id="promptInput" rows="6" placeholder="Collez ou modifiez le prompt ici..."></textarea>
-          </div>
-
-          <div class="action-row">
-            <button id="generateBtn" class="btn-primary">Générer</button>
-            <button id="shuffleBtn" class="btn-secondary">Aléatoire</button>
-          </div>
-        </aside>
-
-        <section class="panel preview-panel">
-          <div class="character-card">
-            <div class="portrait" aria-label="Portrait du personnage">
-              <img id="portraitImage" class="portrait-image" alt="Portrait personnalisé" />
-              <div class="halo"></div>
-              <div class="hair"></div>
-              <div class="face"></div>
-              <div class="body"></div>
-              <div class="detail one"></div>
-              <div class="detail two"></div>
-            </div>
-
-            <div class="character-copy">
-              <div class="name-row">
-                <h2 id="characterName">Arielle Voss</h2>
-              </div>
-
-              <div class="tag-row">
-                <span id="characterRole" class="tag">Dominant</span>
-                <span id="characterSetting" class="tag">Penthouse à Paris</span>
-                <span id="characterMood" class="tag">Dangereux</span>
-              </div>
-
-              <div id="traitList" class="trait-list"></div>
-            </div>
-          </div>
-
-          <div class="story-grid">
-            <article class="story-card">
-              <p class="eyebrow">Background</p>
-              <h3>Histoire</h3>
-              <p id="backstoryText"></p>
-            </article>
-
-            <article class="story-card">
-              <p class="eyebrow">Prompt</p>
-              <h3>Scene de génération</h3>
-              <pre id="promptOutput"></pre>
-            </article>
-          </div>
+          <button id="resetButton" class="btn-secondary reset-button" type="button">Réinitialiser le scénario</button>
         </section>
+
+        <div class="test-grid">
+          <aside class="panel setup-panel" aria-label="Configuration du scénario">
+            <div class="panel-header">
+              <p class="eyebrow">01 · Configuration</p>
+              <h2>Personnage & scène</h2>
+            </div>
+
+            <div class="field-group">
+              <label for="characterNameInput">Nom du personnage</label>
+              <input id="characterNameInput" type="text" value="Arielle Voss" maxlength="50" />
+            </div>
+            <div class="field-group">
+              <label for="locationInput">Lieu de départ</label>
+              <input id="locationInput" type="text" value="Penthouse à Paris, près d’une grande fenêtre" maxlength="120" />
+            </div>
+            <div class="field-group">
+              <label for="toneSelect">Tonalité</label>
+              <select id="toneSelect">
+                <option value="mystérieuse et cinématographique">Mystérieuse et cinématographique</option>
+                <option value="romantique et tendre">Romantique et tendre</option>
+                <option value="dramatique et intense">Dramatique et intense</option>
+                <option value="élégante et contemplative">Élégante et contemplative</option>
+              </select>
+            </div>
+
+            <div class="field-group upload-group">
+              <label for="referenceImageInput">Image de référence</label>
+              <input id="referenceImageInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+              <small>PNG, JPG, WEBP ou GIF · 8 Mo maximum. L’image reste dans ce navigateur et n’est pas envoyée à R1.</small>
+            </div>
+            <div id="referencePreview" class="reference-preview" data-empty="true">
+              <img id="referenceImage" alt="Aperçu de l’image de référence" hidden />
+              <div id="referencePlaceholder" class="reference-placeholder">
+                <span class="placeholder-icon" aria-hidden="true">＋</span>
+                <span>Ton image de référence apparaîtra ici</span>
+              </div>
+              <button id="removeImageButton" class="remove-image-button" type="button" hidden aria-label="Retirer l’image">×</button>
+            </div>
+            <p id="imageStatus" class="field-hint" role="status">Aucune image chargée.</p>
+          </aside>
+
+          <section class="panel scene-panel" aria-labelledby="sceneHeading">
+            <div class="scene-heading-row">
+              <div>
+                <p class="eyebrow">02 · État courant du monde</p>
+                <h2 id="sceneHeading">La scène</h2>
+              </div>
+              <span id="turnBadge" class="turn-badge">Tour 0</span>
+            </div>
+
+            <div class="scene-stage" aria-live="polite">
+              <div class="scene-glow" aria-hidden="true"></div>
+              <div class="scene-stage-content">
+                <span class="live-indicator"><span class="status-dot"></span> ÉTAT DE SCÈNE · LOCAL</span>
+                <p id="sceneLocation" class="scene-location">Penthouse à Paris, près d’une grande fenêtre</p>
+                <h3 id="sceneBeat">La pluie tombe sur Paris. Arielle se tient près de la fenêtre et attend votre réaction.</h3>
+                <p id="sceneReaction" class="scene-reaction">Envoie une action dans le chat pour faire évoluer le contexte.</p>
+              </div>
+              <div class="scene-stats" aria-label="État narratif">
+                <span><small>Humeur</small><strong id="moodValue">Curiosité</strong></span>
+                <span><small>Tension</small><strong id="tensionValue">Douce</strong></span>
+                <span><small>Météo</small><strong id="weatherValue">Pluie</strong></span>
+              </div>
+            </div>
+
+            <div class="context-row">
+              <div>
+                <span class="context-label">Contexte retenu</span>
+                <p id="memorySummary">La rencontre commence près de la fenêtre. La pluie continue à l’extérieur.</p>
+              </div>
+              <span id="referenceState" class="reference-state">Référence : aucune</span>
+            </div>
+
+            <div class="prompt-editor">
+              <div class="prompt-title-row">
+                <div>
+                  <p class="eyebrow">03 · Instructions de scène</p>
+                  <label for="scenePrompt">Prompt modifiable à copier dans R1</label>
+                </div>
+                <button id="refreshPromptButton" class="text-button" type="button">Actualiser depuis le contexte</button>
+              </div>
+              <textarea id="scenePrompt" rows="8" maxlength="4000" spellcheck="true" aria-describedby="promptHelp"></textarea>
+              <div class="prompt-footer">
+                <small id="promptHelp">Le prompt est préparé ici, mais aucun appel à PixVerse n’est effectué.</small>
+                <button id="copyPromptButton" class="btn-secondary copy-button" type="button">Copier le prompt</button>
+              </div>
+              <p id="promptStatus" class="field-hint" role="status" aria-live="polite"></p>
+            </div>
+          </section>
+
+          <section class="panel chat-panel" aria-labelledby="chatHeading">
+            <div class="panel-header chat-header">
+              <div>
+                <p class="eyebrow">04 · Interaction</p>
+                <h2 id="chatHeading">Chat de scénario</h2>
+              </div>
+              <span class="local-label">Prototype local</span>
+            </div>
+            <div id="chatMessages" class="chat-messages" role="log" aria-live="polite" aria-relevant="additions text">
+              <article class="chat-bubble assistant-bubble">
+                <span class="bubble-author">Arielle · début de scène</span>
+                <p>La pluie dessine des lignes sur la fenêtre. Je reste tournée vers la ville, consciente de ta présence derrière moi.</p>
+              </article>
+            </div>
+            <div class="suggestion-row" aria-label="Suggestions de test">
+              <button class="suggestion-chip" type="button" data-message="Je m’approche de la fenêtre et regarde la pluie avec elle.">S’approcher</button>
+              <button class="suggestion-chip" type="button" data-message="Le vent entrouvre la fenêtre. Fais réagir la pièce.">Changer l’environnement</button>
+              <button class="suggestion-chip" type="button" data-message="Je lui tends la main, sans insister. Elle choisit sa réaction.">Laisser le choix</button>
+            </div>
+            <form id="chatForm" class="chat-form">
+              <label class="visually-hidden" for="chatInput">Décris une action ou écris un message</label>
+              <textarea id="chatInput" rows="2" maxlength="600" placeholder="Décris une action ou écris un message…" required></textarea>
+              <button id="sendButton" class="btn-primary send-button" type="submit" aria-label="Envoyer le message">Envoyer <span aria-hidden="true">↗</span></button>
+            </form>
+            <p class="chat-disclaimer">Les réactions du chat sont simulées dans le navigateur : elles ne proviennent pas d’un modèle d’IA.</p>
+          </section>
+        </div>
       </main>
     </div>
-
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
