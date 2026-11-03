@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#100d14" />
     <title>Velvet Mirage Studio</title>
     <meta name="description" content="Créateur de personnage et de prompt pour un univers romantique adulte cinématographique." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -14,182 +15,59 @@
     <div class="app-shell">
       <header class="topbar">
         <div class="brand-wrap">
-          <div class="logo">V</div>
-          <div>
-            <span class="eyebrow">Studio</span>
-            <h1>Velvet Mirage</h1>
-          </div>
+          <div class="logo" aria-hidden="true">V</div>
+          <div><span class="eyebrow">Studio</span><h1>Velvet Mirage</h1></div>
         </div>
         <div class="status-pill">AI love story generator</div>
       </header>
 
       <main class="layout">
-        <aside class="panel builder-panel">
+        <aside class="panel builder-panel" aria-labelledby="builderTitle">
           <div class="panel-header">
             <p class="eyebrow">Character Builder</p>
-            <h2>Créer une héroïne</h2>
+            <h2 id="builderTitle">Créer une héroïne</h2>
           </div>
-
-          <div class="field-group">
-            <label for="nameInput">Nom du personnage</label>
-            <input id="nameInput" type="text" value="Arielle Voss" maxlength="30" />
-          </div>
-
-          <div class="field-group">
-            <label for="titleInput">Titre</label>
-            <input id="titleInput" type="text" placeholder="Ex: Duchesse des ombres" maxlength="40" />
-          </div>
-
-          <div class="field-group">
-            <label for="archetypeSelect">Archétype</label>
-            <select id="archetypeSelect">
-              <option value="warrior">Guerrière</option>
-              <option value="duchess">Duchesse</option>
-              <option value="mystic">Mystique</option>
-              <option value="amazon">Amazone</option>
-              <option value="queen">Impératrice</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label for="worldSelect">Décor</label>
-            <select id="worldSelect">
-              <option value="moonlit kingdom">Palais lunaire</option>
-              <option value="sunset citadel">Citadelle du coucher</option>
-              <option value="temple of ash">Temple des cendres</option>
-              <option value="battle palace">Palais de guerre</option>
-              <option value="sable empire">Empire du sable</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label for="moodSelect">Ambiance</label>
-            <select id="moodSelect">
-              <option value="dangerous">Dangereux</option>
-              <option value="romantic">Romantique</option>
-              <option value="mystic">Mystique</option>
-              <option value="elegant">Élégant</option>
-              <option value="royal">Royal</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label for="silhouetteSelect">Silhouette</label>
-            <select id="silhouetteSelect">
-              <option value="amazon">Amazone</option>
-              <option value="fitted">Centrée</option>
-              <option value="royal">Royale</option>
-              <option value="velvet">Velours</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label for="energySelect">Intensité</label>
-            <select id="energySelect">
-              <option value="1">Faible</option>
-              <option value="2">Moyenne</option>
-              <option value="3" selected>Élevée</option>
-              <option value="4">Très élevée</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label for="imageUpload">Portrait personnalisé</label>
-            <input id="imageUpload" type="file" accept="image/*" />
-          </div>
-
-          <div class="field-group">
-            <label for="promptInput">Prompt personnalisé</label>
-            <textarea id="promptInput" rows="6" placeholder="Collez ou modifiez le prompt ici..."></textarea>
-          </div>
-
-          <div class="action-row">
-            <button id="generateBtn" class="btn-primary" type="button">Générer</button>
-            <button id="shuffleBtn" class="btn-secondary" type="button">Aléatoire</button>
-          </div>
-
-          <div class="secondary-actions">
-            <button id="copyPromptBtn" class="btn-ghost" type="button">Copier prompt</button>
-            <button id="downloadJsonBtn" class="btn-ghost" type="button">JSON</button>
-            <button id="exportPngBtn" class="btn-ghost" type="button">Exporter PNG</button>
-          </div>
+          <div class="field-group"><label for="nameInput">Nom du personnage</label><input id="nameInput" type="text" value="Arielle Voss" maxlength="30" autocomplete="off" /></div>
+          <div class="field-group"><label for="titleInput">Titre</label><input id="titleInput" type="text" placeholder="Ex. Duchesse des ombres" maxlength="40" autocomplete="off" /></div>
+          <div class="field-group"><label for="archetypeSelect">Archétype</label><select id="archetypeSelect"><option value="warrior">Guerrière</option><option value="duchess">Duchesse</option><option value="mystic">Mystique</option><option value="amazon">Amazone</option><option value="queen">Impératrice</option></select></div>
+          <div class="field-group"><label for="worldSelect">Décor</label><select id="worldSelect"><option value="moonlit kingdom">Palais lunaire</option><option value="sunset citadel">Citadelle au coucher du soleil</option><option value="temple of ash">Temple des cendres</option><option value="battle palace">Palais de guerre</option><option value="sable empire">Empire du sable</option></select></div>
+          <div class="field-group"><label for="moodSelect">Ambiance</label><select id="moodSelect"><option value="dangerous">Dangereuse</option><option value="romantic">Romantique</option><option value="mystic">Mystique</option><option value="elegant">Élégante</option><option value="royal">Royale</option></select></div>
+          <div class="field-group"><label for="silhouetteSelect">Style de tenue</label><select id="silhouetteSelect"><option value="amazon">Amazone</option><option value="fitted">Ajustée</option><option value="royal">Royale</option><option value="velvet">Velours</option></select></div>
+          <div class="field-group"><label for="energySelect">Intensité</label><select id="energySelect"><option value="1">Faible</option><option value="2">Moyenne</option><option value="3" selected>Élevée</option><option value="4">Très élevée</option></select></div>
+          <div class="field-group"><label for="imageUpload">Portrait personnalisé (5 Mo max.)</label><input id="imageUpload" type="file" accept="image/*" /></div>
+          <div class="field-group"><label for="promptInput">Prompt personnalisé</label><textarea id="promptInput" rows="6" placeholder="Modifiez le prompt généré ou collez le vôtre..."></textarea></div>
+          <div class="action-row"><button id="generateBtn" class="btn-primary" type="button">Générer</button><button id="shuffleBtn" class="btn-secondary" type="button">Aléatoire</button></div>
+          <div class="secondary-actions"><button id="copyPromptBtn" class="btn-ghost" type="button">Copier le prompt</button><button id="downloadJsonBtn" class="btn-ghost" type="button">Exporter JSON</button><button id="exportPngBtn" class="btn-ghost" type="button">Exporter PNG</button></div>
+          <p id="appStatus" class="app-status" role="status" aria-live="polite"></p>
         </aside>
 
-        <section class="panel preview-panel">
+        <section class="panel preview-panel" aria-label="Aperçu du personnage">
           <div class="character-card">
             <div class="portrait" aria-label="Portrait du personnage">
-              <img id="portraitImage" class="portrait-image" alt="Portrait personnalisé" />
-              <div class="halo"></div>
-              <div class="hair"></div>
-              <div class="face"></div>
-              <div class="body"></div>
-              <div class="detail one"></div>
-              <div class="detail two"></div>
+              <img id="portraitImage" class="portrait-image" alt="Portrait personnalisé du personnage" />
+              <div class="halo"></div><div class="hair"></div><div class="face"></div><div class="body"></div><div class="detail one"></div><div class="detail two"></div>
             </div>
-
             <div class="character-copy">
-              <div class="name-row">
-                <h2 id="characterName">Arielle Voss</h2>
-              </div>
-
-              <div class="tag-row">
-                <span id="characterRole" class="tag">Guerrière</span>
-                <span id="characterTitle" class="tag">Duchesse des ombres</span>
-                <span id="characterWorld" class="tag">Palais lunaire</span>
-                <span id="characterMood" class="tag">Dangereux</span>
-              </div>
-
-              <div id="traitList" class="trait-list"></div>
+              <div class="name-row"><h2 id="characterName">Arielle Voss</h2></div>
+              <div class="tag-row"><span id="characterRole" class="tag">Guerrière</span><span id="characterTitle" class="tag"></span><span id="characterWorld" class="tag"></span><span id="characterMood" class="tag"></span></div>
+              <div id="traitList" class="trait-list" aria-label="Traits de caractère"></div>
             </div>
           </div>
-
           <div class="story-grid">
-            <article class="story-card">
-              <p class="eyebrow">Background</p>
-              <h3>Histoire</h3>
-              <p id="backstoryText"></p>
-            </article>
-
-            <article class="story-card">
-              <p class="eyebrow">Prompt</p>
-              <h3>Scène de génération</h3>
-              <pre id="promptOutput"></pre>
-            </article>
+            <article class="story-card"><p class="eyebrow">Background</p><h3>Histoire</h3><p id="backstoryText"></p></article>
+            <article class="story-card"><p class="eyebrow">Prompt</p><h3>Scène de génération</h3><pre id="promptOutput"></pre></article>
           </div>
-
-          <div class="qa-dashboard">
-            <div class="qa-header">
-              <p class="eyebrow">QA</p>
-              <h3>Dashboard de validation</h3>
-            </div>
-
+          <section class="qa-dashboard" aria-labelledby="qaTitle">
+            <div class="qa-header"><p class="eyebrow">QA</p><h3 id="qaTitle">Fiche personnage</h3></div>
             <div class="stat-grid">
-              <div class="stat-box"><span>Nom</span><strong id="qaName">-</strong></div>
-              <div class="stat-box"><span>Archétype</span><strong id="qaArchetype">-</strong></div>
-              <div class="stat-box"><span>Décor</span><strong id="qaWorld">-</strong></div>
-              <div class="stat-box"><span>Énergie</span><strong id="qaEnergy">-</strong></div>
-              <div class="stat-box"><span>Traits</span><strong id="qaTraits">-</strong></div>
-              <div class="stat-box"><span>Prompt</span><strong id="qaPromptLength">-</strong></div>
-              <div class="stat-box"><span>Silhouette</span><strong id="qaSilhouette">-</strong></div>
-              <div class="stat-box"><span>Image</span><strong id="qaImageStatus">-</strong></div>
+              <div class="stat-box"><span>Nom</span><strong id="qaName">-</strong></div><div class="stat-box"><span>Archétype</span><strong id="qaArchetype">-</strong></div><div class="stat-box"><span>Décor</span><strong id="qaWorld">-</strong></div><div class="stat-box"><span>Intensité</span><strong id="qaEnergy">-</strong></div>
+              <div class="stat-box"><span>Traits</span><strong id="qaTraits">-</strong></div><div class="stat-box"><span>Longueur du prompt</span><strong id="qaPromptLength">-</strong></div><div class="stat-box"><span>Tenue</span><strong id="qaSilhouette">-</strong></div><div class="stat-box"><span>Portrait importé</span><strong id="qaImageStatus">-</strong></div>
             </div>
-
-            <div class="qa-footer">
-              <div class="history-panel">
-                <h4>Historique</h4>
-                <ul id="qaHistoryList"></ul>
-              </div>
-
-              <div class="json-panel">
-                <h4>JSON</h4>
-                <pre id="qaJsonOutput">{}</pre>
-              </div>
-            </div>
-          </div>
+            <div class="qa-footer"><div class="history-panel"><h4>Personnages récents</h4><ul id="qaHistoryList"></ul></div><div class="json-panel"><h4>Aperçu JSON</h4><pre id="qaJsonOutput">{}</pre></div></div>
+          </section>
         </section>
       </main>
     </div>
-
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
