@@ -118,7 +118,7 @@ function buildCharacter() {
     selectedTraits.push(randomFrom(Object.values(archetypes).flatMap((entry) => entry.traits)));
   }
 
-  const story = `${finalName}, connue sous le nom de ${finalTitle}, domine ${world} avec une présence presque surnaturelle. D’une élégance glacée et d’un courage sans faille, elle séduit autant qu’elle inspire la peur. Derrière son visage parfait et son allure royale, se cache une âme qui refuse la soumission. Accusée, aimée, admirée ou craint, elle avance comme une légende vivante, capable de transformer le danger en désir et la guerre en destin.`;
+  const story = `${finalName}, connue sous le nom de ${finalTitle}, domine ${world} avec une présence presque surnaturelle. D’une élégance glacée et d’un courage sans faille, elle séduit par son mystère et impose le respect.`;
 
   const generatedPrompt = createPrompt(finalName, finalTitle, archetype, world, mood, energy, silhouette);
   const promptValue = promptInput.value.trim() || generatedPrompt;
@@ -318,7 +318,7 @@ function drawTextLayer(ctx) {
   const archetype = characterRole.textContent || 'Guerrière';
   const world = characterWorld.textContent || 'royaume de lune';
   const textX = 510;
-  let textY = 220;
+  const textY = 220;
 
   ctx.fillStyle = '#f7ebff';
   ctx.font = '700 48px Inter, sans-serif';
