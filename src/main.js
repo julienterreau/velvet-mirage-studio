@@ -1,432 +1,247 @@
-const archetypes = {
-  warrior: {
-    label: 'Guerrière',
-    traits: ['fière', 'résolue', 'protectrice', 'décisive'],
-    style: 'armure élégante, posture impériale, attitude de commandement'
-  },
-  duchess: {
-    label: 'Duchesse',
-    traits: ['élégante', 'intrigante', 'raffinée', 'charismatique'],
-    style: 'robe de velours noir, bijoux anciens, présence aristocratique'
-  },
-  mystic: {
-    label: 'Mystique',
-    traits: ['énigmatique', 'sensible', 'profond', 'ensorceleuse'],
-    style: 'lumière lunaire, voile translucide, regards captivants'
-  },
-  amazon: {
-    label: 'Amazone',
-    traits: ['puissante', 'libre', 'athlétique', 'imposante'],
-    style: 'silhouette sculptée, posture guerrière, allure majestueuse'
-  },
-  queen: {
-    label: 'Impératrice',
-    traits: ['majestueuse', 'implacable', 'dominante', 'radiant'],
-    style: 'robe royale, aura de commandement, beauté souveraine'
-  }
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
+
+const elements = {
+  name: document.querySelector('#characterNameInput'),
+  location: document.querySelector('#locationInput'),
+  tone: document.querySelector('#toneSelect'),
+  imageInput: document.querySelector('#referenceImageInput'),
+  image: document.querySelector('#referenceImage'),
+  imagePlaceholder: document.querySelector('#referencePlaceholder'),
+  imageStatus: document.querySelector('#imageStatus'),
+  removeImage: document.querySelector('#removeImageButton'),
+  sceneLocation: document.querySelector('#sceneLocation'),
+  sceneBeat: document.querySelector('#sceneBeat'),
+  sceneReaction: document.querySelector('#sceneReaction'),
+  mood: document.querySelector('#moodValue'),
+  tension: document.querySelector('#tensionValue'),
+  weather: document.querySelector('#weatherValue'),
+  memory: document.querySelector('#memorySummary'),
+  turn: document.querySelector('#turnBadge'),
+  referenceState: document.querySelector('#referenceState'),
+  prompt: document.querySelector('#scenePrompt'),
+  promptStatus: document.querySelector('#promptStatus'),
+  chat: document.querySelector('#chatMessages'),
+  chatForm: document.querySelector('#chatForm'),
+  chatInput: document.querySelector('#chatInput'),
+  sendButton: document.querySelector('#sendButton'),
+  refreshPrompt: document.querySelector('#refreshPromptButton'),
+  copyPrompt: document.querySelector('#copyPromptButton'),
+  reset: document.querySelector('#resetButton')
 };
 
-const worldOptions = {
-  'moonlit kingdom': ['palais lunaire', 'vignes sombres', 'cours de marbre'],
-  'sunset citadel': ['dômes en or', 'désert rouge', 'coucher de soleil royal'],
-  'temple of ash': ['voiles de cendre', 'pilliers antique', 'lumière sacrée'],
-  'battle palace': ['hall de guerre', 'tentes impériales', 'archers sur les remparts'],
-  'sable empire': ['dunes dorées', 'vent mystique', 'sérénité sacrée']
-};
+const initialState = () => ({
+  turn: 0,
+  mood: 'Curiosité',
+  tension: 'Douce',
+  weather: 'Pluie',
+  beat: 'La pluie tombe sur Paris. Arielle se tient près de la fenêtre et attend votre réaction.',
+  reaction: 'Envoie une action dans le chat pour faire évoluer le contexte.',
+  memories: ['La rencontre commence près de la fenêtre.', 'La pluie continue à l’extérieur.']
+});
 
-const moods = {
-  dangerous: 'dynamique dangereuse et magnétique',
-  romantic: 'romance passionnée et tendre',
-  mystic: 'mystère ancien et fascination silencieuse',
-  elegant: 'élégance aristocratique et présence rare',
-  royal: 'prestige royal et volonté de commandement'
-};
+let state = initialState();
+let referenceObjectUrl = null;
+let promptWasEdited = false;
 
-const silhouettes = {
-  amazon: 'silhouette amazone, hanches sculptées, posture majestueuse',
-  fitted: 'silhouette cintrée, corsage ajusté, élégance aérienne',
-  royal: 'robe royale moulante, allure souveraine, présence impériale',
-  velvet: 'robe en velours sombre, ligne fluide, glamour discret'
-};
+function buildPrompt() {
+  const name = elements.name.value.trim() || 'Arielle';
+  const location = elements.location.value.trim() || 'un lieu cinématographique';
+  const imageDirection = referenceObjectUrl
+    ? `Utiliser l’image de référence chargée comme guide d’apparence du personnage; préserver son identité visuelle.`
+    : 'Personnage fictif adulte, apparence cohérente au fil de la scène.';
 
-const firstNames = ['Selene', 'Lysandra', 'Aurelia', 'Nerissa', 'Vesper', 'Cassia', 'Maeve', 'Ilyra', 'Sabrina', 'Elaria'];
-const lastNames = ['Veyr', 'Dorian', 'Vale', 'Ashen', 'Montrose', 'Sable', 'Raven', 'Cairn', 'Voss', 'Noir'];
-
-const titleInput = document.querySelector('#titleInput');
-const nameInput = document.querySelector('#nameInput');
-const archetypeSelect = document.querySelector('#archetypeSelect');
-const worldSelect = document.querySelector('#worldSelect');
-const moodSelect = document.querySelector('#moodSelect');
-const silhouetteSelect = document.querySelector('#silhouetteSelect');
-const energySelect = document.querySelector('#energySelect');
-const imageUpload = document.querySelector('#imageUpload');
-const promptInput = document.querySelector('#promptInput');
-
-const characterName = document.querySelector('#characterName');
-const characterTitle = document.querySelector('#characterTitle');
-const characterRole = document.querySelector('#characterRole');
-const characterWorld = document.querySelector('#characterWorld');
-const traitList = document.querySelector('#traitList');
-const backstoryText = document.querySelector('#backstoryText');
-const promptOutput = document.querySelector('#promptOutput');
-const portraitImage = document.querySelector('#portraitImage');
-
-const qaName = document.querySelector('#qaName');
-const qaArchetype = document.querySelector('#qaArchetype');
-const qaWorld = document.querySelector('#qaWorld');
-const qaEnergy = document.querySelector('#qaEnergy');
-const qaTraits = document.querySelector('#qaTraits');
-const qaPromptLength = document.querySelector('#qaPromptLength');
-const qaSilhouette = document.querySelector('#qaSilhouette');
-const qaImageStatus = document.querySelector('#qaImageStatus');
-const qaJsonOutput = document.querySelector('#qaJsonOutput');
-const qaHistoryList = document.querySelector('#qaHistoryList');
-
-let history = [];
-
-function randomFrom(list) {
-  return list[Math.floor(Math.random() * list.length)];
-}
-
-function createPrompt(finalName, title, archetype, world, mood, energy, silhouette) {
-  const worldDetail = randomFrom(worldOptions[world]);
   return [
-    `Portrait of ${finalName}, ${title}, a breathtaking adult woman with ${archetype.style},`,
-    `in a ${world} environment, ${moods[mood]},`,
-    `luxury cinematic lighting, dramatic composition, immaculate skin, elegant dark fantasy wardrobe,`,
-    `${silhouettes[silhouette]}, strong delicate features, piercing expressive eyes,`,
-    `haute couture atmosphere, romantic tension, atmospheric shadows, soft gold and noir palette,`,
-    `${worldDetail}, rich cinematic textures, intense presence, refined beauty, elegant motion,`,
-    `photorealistic portrait, dramatic focus, premium fantasy art, intensity ${energy}.`
-  ].join(' ');
+    'Génère une scène interactive continue, pas un montage de plans indépendants.',
+    `${imageDirection}`,
+    `${name} se trouve dans ${location}.`,
+    `Tonalité : ${elements.tone.value}. Humeur : ${state.mood}. Tension : ${state.tension}. Météo : ${state.weather}.`,
+    `État actuel de la scène : ${state.beat}`,
+    `Dernière réaction attendue : ${state.reaction}`,
+    `Continuité à préserver : ${state.memories.slice(-4).join(' ')}`,
+    'Conserver le même personnage, le même lieu et les événements établis. Faire évoluer les gestes, l’expression, la lumière et l’atmosphère progressivement en réponse à l’action du joueur. Mouvement naturel, rendu cinématographique, aucun changement de décor sans transition.'
+  ].join('\n\n');
 }
 
-function buildCharacter() {
-  const customName = nameInput.value.trim();
-  const customTitle = titleInput.value.trim();
-  const archetype = archetypes[archetypeSelect.value];
-  const world = worldSelect.value;
-  const mood = moodSelect.value;
-  const energy = Number(energySelect.value);
-  const silhouette = silhouetteSelect.value;
+function refreshPrompt({ announce = true } = {}) {
+  elements.prompt.value = buildPrompt();
+  promptWasEdited = false;
+  if (announce) elements.promptStatus.textContent = 'Prompt actualisé avec le contexte courant.';
+}
 
-  const finalName = customName || `${randomFrom(firstNames)} ${randomFrom(lastNames)}`;
-  const finalTitle = customTitle || `Noble de ${world}`;
-  const selectedTraits = [...archetype.traits];
+function renderState() {
+  const name = elements.name.value.trim() || 'Arielle';
+  elements.sceneLocation.textContent = elements.location.value.trim() || 'Lieu non défini';
+  elements.sceneBeat.textContent = state.beat;
+  elements.sceneReaction.textContent = state.reaction;
+  elements.mood.textContent = state.mood;
+  elements.tension.textContent = state.tension;
+  elements.weather.textContent = state.weather;
+  elements.turn.textContent = `Tour ${state.turn}`;
+  elements.memory.textContent = state.memories.slice(-4).join(' ');
+  elements.referenceState.textContent = referenceObjectUrl ? 'Référence : chargée localement' : 'Référence : aucune';
+  elements.chatInput.setAttribute('aria-label', `Message ou action pour ${name}`);
 
-  while (selectedTraits.length < 4) {
-    selectedTraits.push(randomFrom(Object.values(archetypes).flatMap((entry) => entry.traits)));
+  if (!promptWasEdited) refreshPrompt({ announce: false });
+}
+
+function appendMessage(role, author, text) {
+  const article = document.createElement('article');
+  article.className = `chat-bubble ${role === 'user' ? 'user-bubble' : 'assistant-bubble'}`;
+
+  const authorLabel = document.createElement('span');
+  authorLabel.className = 'bubble-author';
+  authorLabel.textContent = author;
+  const message = document.createElement('p');
+  message.textContent = text;
+  article.append(authorLabel, message);
+  elements.chat.append(article);
+  elements.chat.scrollTop = elements.chat.scrollHeight;
+}
+
+function interpretLocally(message) {
+  const text = message.toLocaleLowerCase('fr');
+  const name = elements.name.value.trim() || 'Arielle';
+  const previousBeat = state.beat;
+
+  if (/fenêtre|vitre|pluie|orage|vent/.test(text)) {
+    state.weather = /orage|éclair|tonnerre/.test(text) ? 'Orage' : /vent/.test(text) ? 'Vent et pluie' : 'Pluie';
+    state.beat = /vent/.test(text)
+      ? 'Une rafale fait bouger les rideaux; les reflets de la ville tremblent sur la vitre.'
+      : 'Les gouttes continuent de glisser sur la fenêtre tandis que la scène se prolonge au même endroit.';
+    state.reaction = `${name} tourne légèrement la tête vers la fenêtre et réagit au changement dans l’atmosphère.`;
+  } else if (/approche|avance|près d'elle|près d’elle|m'approche|m’approche/.test(text)) {
+    state.beat = 'Le joueur s’est rapproché de la fenêtre; la distance entre les personnages change sans déplacement de décor.';
+    state.reaction = `${name} remarque votre présence, se tourne vers vous et laisse un silence avant de répondre.`;
+  } else if (/main|tend|toucher|touche/.test(text)) {
+    state.beat = 'Un geste est proposé, sans contact imposé; la scène attend la réponse du personnage.';
+    state.reaction = `${name} observe le geste, hésite un instant et choisit librement de répondre avec prudence.`;
+    state.tension = 'Plus attentive';
+  } else if (/lumière|lampe|éteint|sombre|bougie/.test(text)) {
+    state.beat = 'La lumière de la pièce change progressivement, tandis que le décor et les personnages restent en place.';
+    state.reaction = `${name} lève les yeux vers la lumière et s’adapte à l’ambiance nouvelle.`;
+  } else if (/part|sort|quitte|s'en va|s’en va/.test(text)) {
+    state.beat = 'Le joueur évoque un départ; la scène reste au même endroit jusqu’à ce qu’une transition soit décidée.';
+    state.reaction = `${name} remarque votre intention et vous demande calmement si vous souhaitez vraiment partir.`;
+    state.tension = 'Incertaine';
+  } else if (/bonjour|salut|bonsoir|parle|dis|demande|question/.test(text)) {
+    state.beat = 'La conversation reprend dans le penthouse; la pluie et le décor restent continus.';
+    state.reaction = `${name} écoute votre message, puis répond sans interrompre le fil de la scène.`;
+  } else {
+    state.beat = `La scène poursuit son cours après l’action : « ${message} »`;
+    state.reaction = `${name} prend un instant pour considérer votre action et réagit en restant dans le contexte établi.`;
   }
 
-  const story = `${finalName}, connue sous le nom de ${finalTitle}, domine ${world} avec une présence presque surnaturelle. D’une élégance glacée et d’un courage sans faille, elle séduit autant qu’elle inspire la peur. Derrière son visage parfait et son allure royale, se cache une âme qui refuse la soumission. Accusée, aimée, admirée ou craint, elle avance comme une légende vivante, capable de transformer le danger en désir et la guerre en destin.`;
+  state.turn += 1;
+  state.mood = state.turn > 2 ? 'Attention soutenue' : 'Curiosité';
+  state.memories.push(`Tour ${state.turn} : ${message}`, `Évolution : ${state.beat}`);
+  state.memories = state.memories.slice(-8);
 
-  const generatedPrompt = createPrompt(finalName, finalTitle, archetype, world, mood, energy, silhouette);
-  const promptValue = promptInput.value.trim() || generatedPrompt;
+  if (state.beat === previousBeat) {
+    state.beat = 'La scène continue sans rupture, en tenant compte du dernier message.';
+  }
 
-  characterName.textContent = finalName;
-  characterTitle.textContent = finalTitle;
-  characterRole.textContent = archetype.label;
-  characterWorld.textContent = world;
-
-  traitList.innerHTML = selectedTraits
-    .slice(0, 4)
-    .map((trait) => `<span class="trait">${trait}</span>`)
-    .join('');
-
-  backstoryText.textContent = story;
-  promptOutput.textContent = promptValue;
-  promptInput.value = promptValue;
-
-  const state = {
-    name: finalName,
-    title: finalTitle,
-    archetype: archetype.label,
-    world,
-    mood,
-    energy,
-    silhouette,
-    traits: selectedTraits.slice(0, 4),
-    prompt: promptValue,
-    history: story,
-    hasImage: Boolean(portraitImage.src && portraitImage.src !== window.location.href),
-    timestamp: new Date().toISOString()
-  };
-
-  updateDashboard(state);
-  history = [state, ...history].slice(0, 5);
-  renderHistory();
+  return `${state.reaction} (Réaction de démonstration locale, pas une réponse d’IA.)`;
 }
 
-function updateDashboard(state) {
-  qaName.textContent = state.name;
-  qaArchetype.textContent = state.archetype;
-  qaWorld.textContent = state.world;
-  qaEnergy.textContent = state.energy;
-  qaTraits.textContent = state.traits.length;
-  qaPromptLength.textContent = String(state.prompt.length);
-  qaSilhouette.textContent = state.silhouette;
-  qaImageStatus.textContent = state.hasImage ? 'Oui' : 'Aucun';
+function sendMessage(message) {
+  const cleanMessage = message.trim();
+  if (!cleanMessage) return;
 
-  qaJsonOutput.textContent = JSON.stringify({
-    name: state.name,
-    title: state.title,
-    archetype: state.archetype,
-    world: state.world,
-    mood: state.mood,
-    energy: state.energy,
-    silhouette: state.silhouette,
-    traits: state.traits,
-    promptLength: state.prompt.length,
-    hasImage: state.hasImage,
-    prompt: state.prompt
-  }, null, 2);
+  appendMessage('user', 'Vous', cleanMessage);
+  const simulatedReply = interpretLocally(cleanMessage);
+  renderState();
+  appendMessage('assistant', elements.name.value.trim() || 'Arielle · simulation', simulatedReply);
+  elements.promptStatus.textContent = promptWasEdited
+    ? 'Le contexte a changé. Votre prompt personnalisé est conservé; actualisez-le si souhaité.'
+    : 'Contexte mis à jour. Le prompt reflète le nouvel état de la scène.';
 }
 
-function renderHistory() {
-  qaHistoryList.innerHTML = history
-    .map((item) => `<li><strong>${item.name}</strong> — ${item.archetype} / ${item.world}</li>`)
-    .join('');
-}
-
-function shuffleCharacter() {
-  const randomName = `${randomFrom(firstNames)} ${randomFrom(lastNames)}`;
-  const randomTitle = `${randomFrom(['Duchesse', 'Reine', 'Gardienne', 'Élue', 'Commandante'])} des ${randomFrom(['ombres', 'dunes', 'flammes', 'lunes', 'cendres'])}`;
-
-  nameInput.value = randomName;
-  titleInput.value = randomTitle;
-  archetypeSelect.value = randomFrom(Object.keys(archetypes));
-  worldSelect.value = randomFrom(Object.keys(worldOptions));
-  moodSelect.value = randomFrom(Object.keys(moods));
-  silhouetteSelect.value = randomFrom(Object.keys(silhouettes));
-  energySelect.value = String(Math.floor(Math.random() * 4) + 1);
-  buildCharacter();
-}
-
-function handleImageUpload(event) {
+function handleImageSelection(event) {
   const file = event.target.files?.[0];
   if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = (loadEvent) => {
-    portraitImage.src = loadEvent.target.result;
-    portraitImage.classList.add('visible');
-    buildCharacter();
-  };
-  reader.readAsDataURL(file);
-}
-
-async function copyPrompt() {
-  const text = promptInput.value.trim();
-  if (!text) return;
-
-  try {
-    await navigator.clipboard.writeText(text);
-    promptInput.focus();
-    promptInput.select();
-  } catch (error) {
-    console.warn('Clipboard not available:', error);
+  if (!IMAGE_TYPES.has(file.type)) {
+    elements.imageStatus.textContent = 'Format non pris en charge. Choisis une image PNG, JPG, WEBP ou GIF.';
+    event.target.value = '';
+    return;
   }
-}
-
-function downloadJson() {
-  const payload = {
-    name: characterName.textContent,
-    title: characterTitle.textContent,
-    archetype: characterRole.textContent,
-    world: characterWorld.textContent,
-    prompt: promptInput.value.trim(),
-    backstory: backstoryText.textContent,
-    traits: Array.from(document.querySelectorAll('.trait')).map((item) => item.textContent),
-    hasImage: Boolean(portraitImage.src && portraitImage.src !== window.location.href)
-  };
-
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'velvet-mirage-character.json';
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
-function exportCardAsPng() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1200;
-  canvas.height = 900;
-  const ctx = canvas.getContext('2d');
-
-  const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  gradient.addColorStop(0, '#100d14');
-  gradient.addColorStop(0.5, '#1b1522');
-  gradient.addColorStop(1, '#170f1a');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const cardX = 70;
-  const cardY = 80;
-  const cardW = 1060;
-  const cardH = 740;
-  ctx.fillStyle = 'rgba(24, 18, 31, 0.9)';
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-  ctx.lineWidth = 2;
-  roundRect(ctx, cardX, cardY, cardW, cardH, 28);
-  ctx.fill();
-  ctx.stroke();
-
-  const portraitX = 120;
-  const portraitY = 180;
-  const portraitW = 320;
-  const portraitH = 420;
-
-  if (portraitImage.src && portraitImage.src !== window.location.href) {
-    const img = new Image();
-    img.onload = () => {
-      ctx.save();
-      roundRect(ctx, portraitX, portraitY, portraitW, portraitH, 28);
-      ctx.clip();
-      ctx.drawImage(img, portraitX, portraitY, portraitW, portraitH);
-      ctx.restore();
-      drawTextLayer(ctx);
-      downloadCanvas(canvas);
-    };
-    img.src = portraitImage.src;
+  if (file.size > MAX_IMAGE_BYTES) {
+    elements.imageStatus.textContent = 'Image trop volumineuse. La limite est de 8 Mo.';
+    event.target.value = '';
     return;
   }
 
-  const artGradient = ctx.createRadialGradient(
-    portraitX + 150,
-    portraitY + 80,
-    20,
-    portraitX + 150,
-    portraitY + 150,
-    260
-  );
-  artGradient.addColorStop(0, 'rgba(255,255,255,0.25)');
-  artGradient.addColorStop(0.4, 'rgba(255, 154, 170, 0.33)');
-  artGradient.addColorStop(1, 'rgba(18,12,20,0.9)');
-  ctx.fillStyle = artGradient;
-  roundRect(ctx, portraitX, portraitY, portraitW, portraitH, 28);
-  ctx.fill();
-
-  drawTextLayer(ctx);
-  downloadCanvas(canvas);
+  if (referenceObjectUrl) URL.revokeObjectURL(referenceObjectUrl);
+  referenceObjectUrl = URL.createObjectURL(file);
+  elements.image.src = referenceObjectUrl;
+  elements.image.hidden = false;
+  elements.imagePlaceholder.hidden = true;
+  elements.removeImage.hidden = false;
+  elements.imageStatus.textContent = `${file.name} chargée pour l’aperçu local. Elle n’est pas envoyée à un service.`;
+  elements.referenceState.textContent = 'Référence : chargée localement';
+  if (!promptWasEdited) refreshPrompt({ announce: false });
 }
 
-function drawTextLayer(ctx) {
-  const title = characterName.textContent || 'Velvet Mirage';
-  const subtitle = characterTitle.textContent || 'Reine des dunes';
-  const archetype = characterRole.textContent || 'Guerrière';
-  const world = characterWorld.textContent || 'royaume de lune';
-  const textX = 510;
-  let textY = 220;
-
-  ctx.fillStyle = '#f7ebff';
-  ctx.font = '700 48px Inter, sans-serif';
-  ctx.fillText(title, textX, textY);
-
-  ctx.fillStyle = '#d8c7e5';
-  ctx.font = '600 24px Inter, sans-serif';
-  ctx.fillText(subtitle, textX, textY + 42);
-
-  ctx.fillStyle = '#ff6dcf';
-  ctx.fillRect(textX, textY + 68, 220, 5);
-
-  ctx.fillStyle = '#f3eaf8';
-  ctx.font = '500 20px Inter, sans-serif';
-  ctx.fillText(`${archetype} • ${world}`, textX, textY + 120);
-
-  const traits = Array.from(document.querySelectorAll('.trait')).map((el) => el.textContent).slice(0, 4);
-  ctx.fillStyle = '#f8d797';
-  ctx.font = '600 18px Inter, sans-serif';
-  traits.forEach((trait, index) => {
-    ctx.fillText(`#${trait}`, textX + index * 110, textY + 170);
-  });
-
-  const prompt = (promptInput.value || promptOutput.textContent || '').trim();
-  const wrapped = wrapText(ctx, prompt, 540, 4);
-  ctx.fillStyle = '#f3eaf8';
-  ctx.font = '500 18px Inter, sans-serif';
-  wrapped.forEach((line, index) => {
-    ctx.fillText(line, textX, textY + 245 + index * 28);
-  });
+function removeImage() {
+  if (referenceObjectUrl) URL.revokeObjectURL(referenceObjectUrl);
+  referenceObjectUrl = null;
+  elements.image.removeAttribute('src');
+  elements.image.hidden = true;
+  elements.imagePlaceholder.hidden = false;
+  elements.removeImage.hidden = true;
+  elements.imageInput.value = '';
+  elements.imageStatus.textContent = 'Aucune image chargée.';
+  elements.referenceState.textContent = 'Référence : aucune';
+  if (!promptWasEdited) refreshPrompt({ announce: false });
 }
 
-function wrapText(ctx, text, maxWidth, maxLines) {
-  const words = text.split(' ');
-  const lines = [];
-  let current = '';
+function resetScenario() {
+  state = initialState();
+  elements.chat.replaceChildren();
+  appendMessage('assistant', 'Arielle · début de scène', 'La pluie dessine des lignes sur la fenêtre. Je reste tournée vers la ville, consciente de ta présence derrière moi.');
+  renderState();
+  elements.promptStatus.textContent = 'Scénario réinitialisé. Image et paramètres conservés.';
+}
 
-  for (const word of words) {
-    const test = current ? `${current} ${word}` : word;
-    if (ctx.measureText(test).width > maxWidth && current) {
-      lines.push(current);
-      current = word;
-    } else {
-      current = test;
-    }
-    if (lines.length >= maxLines) break;
+elements.imageInput.addEventListener('change', handleImageSelection);
+elements.removeImage.addEventListener('click', removeImage);
+elements.name.addEventListener('input', renderState);
+elements.location.addEventListener('input', renderState);
+elements.tone.addEventListener('change', renderState);
+elements.prompt.addEventListener('input', () => {
+  promptWasEdited = true;
+  elements.promptStatus.textContent = 'Prompt modifié manuellement.';
+});
+elements.refreshPrompt.addEventListener('click', () => refreshPrompt());
+elements.copyPrompt.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(elements.prompt.value);
+    elements.promptStatus.textContent = 'Prompt copié dans le presse-papiers.';
+  } catch {
+    elements.prompt.focus();
+    elements.prompt.select();
+    elements.promptStatus.textContent = 'Copie automatique indisponible : le prompt est sélectionné, copie-le manuellement.';
   }
-
-  if (current && lines.length < maxLines) {
-    lines.push(current);
+});
+elements.chatForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  sendMessage(elements.chatInput.value);
+  elements.chatInput.value = '';
+  elements.chatInput.focus();
+});
+elements.chatInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    elements.chatForm.requestSubmit();
   }
-
-  return lines;
-}
-
-function downloadCanvas(canvas) {
-  const link = document.createElement('a');
-  link.download = 'velvet-mirage-card.png';
-  link.href = canvas.toDataURL('image/png');
-  link.click();
-}
-
-function roundRect(ctx, x, y, width, height, radius) {
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.lineTo(x + width - radius, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-  ctx.lineTo(x + width, y + height - radius);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-  ctx.lineTo(x + radius, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-  ctx.lineTo(x, y + radius);
-  ctx.quadraticCurveTo(x, y, x + radius, y);
-  ctx.closePath();
-}
-
-imageUpload.addEventListener('change', handleImageUpload);
-
-document.querySelector('#generateBtn').addEventListener('click', buildCharacter);
-document.querySelector('#shuffleBtn').addEventListener('click', shuffleCharacter);
-document.querySelector('#copyPromptBtn').addEventListener('click', copyPrompt);
-document.querySelector('#downloadJsonBtn').addEventListener('click', downloadJson);
-document.querySelector('#exportPngBtn').addEventListener('click', exportCardAsPng);
-
-promptInput.addEventListener('input', () => {
-  const value = promptInput.value.trim();
-  promptOutput.textContent = value || 'Le prompt sera généré ici...';
-  updateDashboard({
-    name: characterName.textContent,
-    title: characterTitle.textContent,
-    archetype: characterRole.textContent,
-    world: characterWorld.textContent,
-    mood: moodSelect.value,
-    energy: Number(energySelect.value),
-    silhouette: silhouetteSelect.value,
-    traits: Array.from(document.querySelectorAll('.trait')).map((node) => node.textContent),
-    prompt: value,
-    history: backstoryText.textContent,
-    hasImage: Boolean(portraitImage.src && portraitImage.src !== window.location.href)
-  });
+});
+document.querySelectorAll('.suggestion-chip').forEach((button) => {
+  button.addEventListener('click', () => sendMessage(button.dataset.message || ''));
+});
+elements.reset.addEventListener('click', resetScenario);
+window.addEventListener('beforeunload', () => {
+  if (referenceObjectUrl) URL.revokeObjectURL(referenceObjectUrl);
 });
 
-nameInput.addEventListener('input', buildCharacter);
-titleInput.addEventListener('input', buildCharacter);
-archetypeSelect.addEventListener('change', buildCharacter);
-worldSelect.addEventListener('change', buildCharacter);
-moodSelect.addEventListener('change', buildCharacter);
-silhouetteSelect.addEventListener('change', buildCharacter);
-energySelect.addEventListener('change', buildCharacter);
-
-buildCharacter();
+renderState();
